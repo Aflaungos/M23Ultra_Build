@@ -1341,20 +1341,24 @@ APPLY_CUSTOM_FEATURES() {
 	cp -rfa "$(pwd)/QuantumROM/Mods/SMART_MANAGER_CN/." "$EXTRACTED_FIRM_DIR/"
 	UPDATE_FLOATING_FEATURE "SEC_FLOATING_FEATURE_SMARTMANAGER_CONFIG_PACKAGE_NAME" "com.samsung.android.sm_cn"
 
-	echo -e "- Adding full OneUI and important apps."
-	if [ ! -d "$EXTRACTED_FIRM_DIR/product/priv-app/AiWallpaper" ]; then
-        cp -rfa "$(pwd)/QuantumROM/Mods/Apps/AiWallpaper/"* "$EXTRACTED_FIRM_DIR/"
-    fi
+	# echo -e "- Adding full OneUI and important apps."
+	# if [ ! -d "$EXTRACTED_FIRM_DIR/product/priv-app/AiWallpaper" ]; then
+        # cp -rfa "$(pwd)/QuantumROM/Mods/Apps/AiWallpaper/"* "$EXTRACTED_FIRM_DIR/"
+    # fi
 
-    if [ ! -d "$EXTRACTED_FIRM_DIR/system/system/app/ClockPackage" ]; then
-        cp -rfa "$(pwd)/QuantumROM/Mods/Apps/ClockPackage/"* "$EXTRACTED_FIRM_DIR/"
-    fi
+    # if [ ! -d "$EXTRACTED_FIRM_DIR/system/system/app/ClockPackage" ]; then
+        # cp -rfa "$(pwd)/QuantumROM/Mods/Apps/ClockPackage/"* "$EXTRACTED_FIRM_DIR/"
+    # fi
 
     if [ ! -d "$EXTRACTED_FIRM_DIR/system/system/app/SecCalculator_R" ]; then
         cp -rfa "$(pwd)/QuantumROM/Mods/Apps/SecCalculator_R/"* "$EXTRACTED_FIRM_DIR/"
     fi
+	
+	if [ ! -d "$EXTRACTED_FIRM_DIR/system/system/app/VoiceNote_5.0" ]; then
+        cp -rfa "$(pwd)/QuantumROM/Mods/Apps/VoiceNote_5.0/"* "$EXTRACTED_FIRM_DIR/"
+    fi
 
-	if [ ! -d "$EXTRACTED_FIRM_DIR/system/system/priv-app/PhotoEditor_AIFull" ]; then
+	if [ ! -d "$EXTRACTED_FIRM_DIR/system/system/priv-app/PhotoEditor_Full" ]; then
 	    rm -rf "$EXTRACTED_FIRM_DIR/system/system/etc/ailasso"
 		rm -rf "$EXTRACTED_FIRM_DIR/system/system/etc/ailassomatting"
 		rm -rf "$EXTRACTED_FIRM_DIR/system/system/etc/inpainting"
@@ -1363,9 +1367,7 @@ APPLY_CUSTOM_FEATURES() {
 		rm -rf "$EXTRACTED_FIRM_DIR/system/system/etc/shadowremoval"
 		rm -rf "$EXTRACTED_FIRM_DIR/system/system/etc/style_transfer"
 	    rm -rf "$EXTRACTED_FIRM_DIR/system/system/priv-app"/PhotoEditor_*
-        cp -rfa "$(pwd)/QuantumROM/Mods/Apps/PhotoEditor_AIFull/"* "$EXTRACTED_FIRM_DIR"
-		unzip -o "$EXTRACTED_FIRM_DIR/system/system/priv-app/PhotoEditor_AIFull.zip" -d "$EXTRACTED_FIRM_DIR/system/system/priv-app/" >/dev/null 2>&1
-		rm -f "$EXTRACTED_FIRM_DIR/system/system/priv-app/PhotoEditor_AIFull.zip"
+        cp -rfa "$(pwd)/QuantumROM/Mods/Apps/PhotoEditor_Full/"* "$EXTRACTED_FIRM_DIR"
     fi
 
     # Apply custom floating feature.
