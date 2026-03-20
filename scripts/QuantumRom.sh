@@ -1141,11 +1141,6 @@ APPLY_STOCK_CONFIG() {
     # Apply stock floating feature.
 	APPLY_STOCK_FLOATING_FEATURE
 
-    # Fix unsupported BPF error for kernels lower than 5.10.
-    if [ "$USE_UI_8_TETHERING_APEX" = "True" ]; then
-        cp -rfa "$(pwd)/QuantumROM/Mods/Tethering_Apex/UI-8/." "$EXTRACTED_FIRM_DIR/"
-    fi
-
 	# Replace Stock Files.
 	rm -rf "$EXTRACTED_FIRM_DIR/system/system/cameradata/portrait_data"
 	rm -rf "$EXTRACTED_FIRM_DIR/system/system/etc/init"/rscmgr*.rc
