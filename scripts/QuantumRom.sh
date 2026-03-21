@@ -220,10 +220,8 @@ EXTRACT_FIRMWARE() {
         echo -e "- Extracting super.img"
         simg2img "$FIRM_DIR/super.img" "$FIRM_DIR/super_raw.img"
         rm -f "$FIRM_DIR/super.img"
-
         sudo "$(pwd)/bin/lp/lpunpack" "$FIRM_DIR/super_raw.img" "$FIRM_DIR"
         rm -f "$FIRM_DIR/super_raw.img"
-
         echo -e "- Extraction complete"
     fi
 }
