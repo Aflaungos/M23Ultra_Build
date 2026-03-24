@@ -7,10 +7,10 @@ fi
 
 # Device info
 export STOCK_DEVICE="$1"
-export TARGET_DEVICE="$3"
-export TARGET_DEVICE_CSC="$4"
-export TARGET_DEVICE_IMEI="$5"
-export OUTPUT_FILESYSTEM="$6"
+export TARGET_DEVICE="$2"
+export TARGET_DEVICE_CSC="$3"
+export TARGET_DEVICE_IMEI="$4"
+export OUTPUT_FILESYSTEM="$5"
 
 # Directories
 export OUT_DIR="$(pwd)/OUT"
