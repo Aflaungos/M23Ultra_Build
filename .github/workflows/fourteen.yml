@@ -30,7 +30,7 @@ on:
 
 jobs:
   build:
-    name: Start QuantumROM Tools.
+    name: Run QuantumROM Tools OS-15.
     runs-on: ubuntu-latest
 
     steps:
@@ -55,7 +55,6 @@ jobs:
         run: |
           sudo bash fourteen.sh \
             "${{ github.event.inputs.STOCK_DEVICE }}" \
-            "${{ github.event.inputs.USE_UI_8_TETHERING_APEX }}" \
             "${{ github.event.inputs.TARGET_DEVICE }}" \
             "${{ github.event.inputs.TARGET_DEVICE_CSC }}" \
             "${{ github.event.inputs.TARGET_DEVICE_IMEI }}" \
@@ -89,7 +88,6 @@ jobs:
           TARGET_DEVICE: ${{ github.event.inputs.TARGET_DEVICE }}
           OUTPUT_FILESYSTEM: ${{ github.event.inputs.OUTPUT_FILESYSTEM }}
           COMPRESS_IMG_TO_XZ: ${{ github.event.inputs.COMPRESS_IMG_TO_XZ }}
-          USE_UI_8_TETHERING_APEX: ${{ github.event.inputs.USE_UI_8_TETHERING_APEX }}
         run: |
            bash release.sh
   
