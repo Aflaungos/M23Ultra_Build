@@ -1,4 +1,4 @@
-name: QuantumROM Tools Sixteen.
+name: QuantumROM Tools Seventeen.
 
 on:
   workflow_dispatch:
@@ -72,7 +72,7 @@ jobs:
 
       - name: Start Rom Build For ${{ github.event.inputs.STOCK_DEVICE }}
         run: |
-          sudo bash sixteen.sh \
+          sudo bash seventeen.sh \
             "${{ github.event.inputs.STOCK_DEVICE }}" \
             "${{ github.event.inputs.USE_UI_8_TETHERING_APEX }}" \
             "${{ github.event.inputs.TARGET_DEVICE }}" \
