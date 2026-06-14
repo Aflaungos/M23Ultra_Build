@@ -84,7 +84,7 @@ GET_PROP() {
     esac
 
     if [ ! -f "$FILE" ]; then
-        echo -e "- ${RED}File not found: $FILE"
+        echo -e "- File not found: $FILE"
         return 1
     fi
 
@@ -339,7 +339,7 @@ EXTRACT_SUPER_IMG() {
         echo -e "super.img extraction complete"
 
     else
-        echo -e "${RED}No super.img found."
+        echo -e "No super.img found."
     fi
 }
 
@@ -355,7 +355,7 @@ PREPARE_PARTITIONS() {
     echo -e "Preparing partitinos. $STOCK_DEVICE"
 	
 	if [ ! -d "$EXTRACTED_FIRM_DIR" ]; then
-        echo -e "${RED} Directory not found: $EXTRACTED_FIRM_DIR"
+        echo -e " Directory not found: $EXTRACTED_FIRM_DIR"
         return 1
     fi
 
@@ -446,12 +446,12 @@ EXTRACT_FIRMWARE_IMG() {
             local tmp_raw="${imgfile}.raw"
 
             if ! simg2img "$imgfile" "$tmp_raw" >/dev/null 2>&1; then
-                echo -e "${RED}Failed to convert sparse image: $img_name"
+                echo -e "Failed to convert sparse image: $img_name"
                 return
             fi
 
             if [ ! -f "$tmp_raw" ]; then
-                echo -e "${RED}- Sparse conversion output missing: $tmp_raw"
+                echo -e "- Sparse conversion output missing: $tmp_raw"
                 return
             fi
 
@@ -481,7 +481,7 @@ EXTRACT_FIRMWARE_IMG() {
                 ;;
 
             *)
-                echo -e "${RED}- $img_name unsupported filesystem type: ($fstype), skipping"
+                echo -e "- $img_name unsupported filesystem type: ($fstype), skipping"
                 ;;
         esac
     }
@@ -499,7 +499,7 @@ EXTRACT_FIRMWARE_IMG() {
         local TARGET_IMG="${EXTRACTED_FIRM_DIR}/$MODE"
 
         if [ ! -f "$TARGET_IMG" ]; then
-            echo -e "${RED}- Image not found: $TARGET_IMG"
+            echo -e "- Image not found: $TARGET_IMG"
             return 1
         fi
 
@@ -573,7 +573,7 @@ INSTALL_FRAMEWORK() {
     local framework_apk="$2"
 
 	if [ ! -f "$framework_apk" ]; then
-        echo -e "- ${RED}File not found: $framework_apk"
+        echo -e "- File not found: $framework_apk"
         return 1
     fi
 
@@ -608,7 +608,7 @@ DECOMPILE() {
     echo -e "Decompiling: $FILE"
 
 	if [ ! -f "$FILE" ]; then
-        echo -e "-${RED} File not found: $FILE"
+        echo -e "- File not found: $FILE"
         return 1
     fi
 
@@ -643,7 +643,7 @@ RECOMPILE() {
     echo -e "Recompiling: $DECOMPILED_DIR"
 
 	if [ ! -d "$DECOMPILED_DIR" ]; then
-        echo -e "-${RED} Directory not found: $DECOMPILED_DIR"
+        echo -e "- Directory not found: $DECOMPILED_DIR"
         return 1
     fi
 
@@ -958,7 +958,7 @@ PATCH_SSRM() {
     echo -e "- Patching: $FILE"
 
     if [ ! -f "$FILE" ]; then
-        echo -e "- ${RED}File not found! Skipping..."
+        echo -e "- File not found! Skipping..."
         return 1
     fi
 
@@ -997,7 +997,7 @@ PATCH_BT_LIB() {
     echo -e "Patching Bluetooth library."
     # Get libbluetooth_jni.so
     if ! ls "$EXTRACTED_FIRM_DIR"/system/system/apex/com.android.bt*.apex >/dev/null 2>&1; then
-        echo -e "- ${RED} No bluetooth apex file found."
+        echo -e "-  No bluetooth apex file found."
         return 1
     fi
 
@@ -1280,7 +1280,7 @@ PATCH_SELINUX() {
     fi
 
     if [ ! -d "$TARGET_ROM_SYSTEM_EXT_DIR" ]; then
-        echo -e "${RED} - No system_ext_dir found. "
+        echo -e " - No system_ext_dir found. "
         return 1
     fi
 
@@ -1823,7 +1823,7 @@ BUILD_PROP() {
     esac
 
     if [ ! -f "$FILE" ]; then
-        echo -e "- ${RED}File not found: $FILE"
+        echo -e "- File not found: $FILE"
         return 1
     fi
 
@@ -2423,7 +2423,7 @@ BUILD_IMG() {
             mv "${OUT_IMG}.sparse" "$OUT_IMG"
 
         else
-            echo -e "${RED}Unsupported filesystem: $FILE_SYSTEM"
+            echo -e "Unsupported filesystem: $FILE_SYSTEM"
             return
         fi
     }
