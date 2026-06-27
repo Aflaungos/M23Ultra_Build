@@ -185,7 +185,7 @@ DOWNLOAD_FIRMWARE() {
     fi
 
     # --- Step 2: Download Firmware ---
-    python3 -m samloader -m "$MODEL" -r "$CSC" -i "$IMEI" download -v "$VERSION" -O "$DOWN_DIR"
+    python3 -m samloader -m "$MODEL" -r "$CSC" -i "$IMEI" download -O "$DOWN_DIR"
     if [ $? -ne 0 ]; then
         echo -e "⛔️ Download failed. Check IMEI/MODEL/CSC."
         exit 1
@@ -210,6 +210,11 @@ EXTRACT_FIRMWARE() {
     local FIRM_DIR="$1"
 
     echo -e "Extracting downloaded firmware."
+
+	if [ ! -d "$FIRM_DIR" ]; then
+        echo -e "- Directory not found: $FIRM_DIR"
+        exit
+    fi
 
     # ---- ZIP ----
     for file in "$FIRM_DIR"/*.zip; do
@@ -333,6 +338,7 @@ EXTRACT_SUPER_IMG() {
             mv -f "$FIRM_DIR/super_raw.img" "$FIRM_DIR/super.img"
         fi
 
+        echo "- Extracting partitions from super.img"
         "$lpunpack" "$FIRM_DIR/super.img" "$FIRM_DIR" || return 1
         rm -f "$FIRM_DIR/super.img"
 
@@ -352,10 +358,10 @@ PREPARE_PARTITIONS() {
 
     local EXTRACTED_FIRM_DIR="$1"
 
-    echo -e "Preparing partitinos. $STOCK_DEVICE"
+    echo -e "Preparing partitions. $STOCK_DEVICE"
 	
 	if [ ! -d "$EXTRACTED_FIRM_DIR" ]; then
-        echo -e " Directory not found: $EXTRACTED_FIRM_DIR"
+        echo -e "- Directory not found: $EXTRACTED_FIRM_DIR"
         return 1
     fi
 
@@ -493,7 +499,9 @@ EXTRACT_FIRMWARE_IMG() {
             extract_img "$imgfile"
         done
 
-	    rm -rf "$EXTRACTED_FIRM_DIR"/*.img
+	    if [ "${GITHUB_ACTIONS}" = "true" ]; then
+            rm -f "$EXTRACTED_FIRM_DIR"/*.img
+        fi
 
     else
         local TARGET_IMG="${EXTRACTED_FIRM_DIR}/$MODE"
@@ -997,7 +1005,7 @@ PATCH_BT_LIB() {
     echo -e "Patching Bluetooth library."
     # Get libbluetooth_jni.so
     if ! ls "$EXTRACTED_FIRM_DIR"/system/system/apex/com.android.bt*.apex >/dev/null 2>&1; then
-        echo -e "-  No bluetooth apex file found."
+        echo -e "- No bluetooth apex file found."
         return 1
     fi
 
@@ -1091,16 +1099,17 @@ FIX_VNDK() {
     fi
 
 	local EXTRACTED_FIRM_DIR="$1"
+	local TARGET_ROM_SYSTEM_EXT_DIR="$(GET_SYSTEM_EXT_DIR "$EXTRACTED_FIRM_DIR")"
 
     echo -e "Checking $STOCK_DEVICE and $TARGET_DEVICE vndk version."
     export SDK="$(GET_PROP "$EXTRACTED_FIRM_DIR" "system" ro.build.version.sdk_full)"
 	echo "- Target rom SDK version: $SDK"
-    if [ -f "$TARGET_ROM_SYSTEM_EXT_DIR/apex/com.android.vndk.v${STOCK_VNDK_VERSION}.apex" ]; then
-        echo -e "- VNDK matched. $TARGET_ROM_SYSTEM_EXT_DIR/apex/com.android.vndk.v${STOCK_VNDK_VERSION}.apex"
+    if [ -f "${TARGET_ROM_SYSTEM_EXT_DIR}/apex/com.android.vndk.v${STOCK_VNDK_VERSION}.apex" ]; then
+        echo -e "- VNDK matched. ${TARGET_ROM_SYSTEM_EXT_DIR}/apex/com.android.vndk.v${STOCK_VNDK_VERSION}.apex"
     else
         echo -e "- VNDK mismatch. Adding SDK $SDK com.android.vndk.v${STOCK_VNDK_VERSION}.apex"
-        rm -rf "$TARGET_ROM_SYSTEM_EXT_DIR/apex"
-        7z x "$VNDKS_COLLECTION/$SDK/${STOCK_VNDK_VERSION}.zip" -o"$TARGET_ROM_SYSTEM_EXT_DIR/" -y >/dev/null 2>&1
+        rm -rf "${TARGET_ROM_SYSTEM_EXT_DIR}/apex"
+        7z x "$VNDKS_COLLECTION/$SDK/${STOCK_VNDK_VERSION}.zip" -o"${TARGET_ROM_SYSTEM_EXT_DIR}/" -y >/dev/null 2>&1
     fi
 }
 
@@ -1247,6 +1256,28 @@ ADJUST_SYSTEM_EXT() {
 }
 
 
+GET_SYSTEM_EXT_DIR() {
+    if [ "$#" -ne 1 ]; then
+        echo "Usage: ${FUNCNAME[0]} <EXTRACTED_FIRM_DIR>"
+        return 1
+    fi
+
+    local EXTRACTED_FIRM_DIR="$1"
+
+    if [ -d "${EXTRACTED_FIRM_DIR}/system_ext/etc" ]; then
+        export TARGET_ROM_SYSTEM_EXT_DIR="${EXTRACTED_FIRM_DIR}/system_ext"
+    elif [ -d "${EXTRACTED_FIRM_DIR}/system/system_ext/etc" ]; then
+        export TARGET_ROM_SYSTEM_EXT_DIR="${EXTRACTED_FIRM_DIR}/system/system_ext"
+    elif [ -d "${EXTRACTED_FIRM_DIR}/system/system/system_ext/etc" ]; then
+        export TARGET_ROM_SYSTEM_EXT_DIR="${EXTRACTED_FIRM_DIR}/system/system/system_ext"
+    else
+        return 1
+    fi
+
+    echo "$TARGET_ROM_SYSTEM_EXT_DIR"
+}
+
+
 PATCH_SELINUX() {
     echo " "
 
@@ -1256,51 +1287,46 @@ PATCH_SELINUX() {
     fi
 
 	local EXTRACTED_FIRM_DIR="$1"
+	local TARGET_ROM_SYSTEM_EXT_DIR="$(GET_SYSTEM_EXT_DIR "$EXTRACTED_FIRM_DIR")"
 
     echo -e "Patching selinux."
 
-	UNSUPPORTED_SELINUX=("audiomirroring" "fabriccrypto" "hal_dsms_default" "qb_id_prop" "hal_dsms_service" "proc_compaction_proactiveness" "sbauth" "ker_app" "kpp_app" "kpp_data" "attiqi_app" "kpoc_charger" "sec_diag")
-
-	if [ -d "${EXTRACTED_FIRM_DIR}/system_ext/etc" ]; then
-        export TARGET_ROM_SYSTEM_EXT_DIR="${EXTRACTED_FIRM_DIR}/system_ext"
-	elif [ -d "${EXTRACTED_FIRM_DIR}/system/system_ext/etc" ]; then
-        export TARGET_ROM_SYSTEM_EXT_DIR="${EXTRACTED_FIRM_DIR}/system/system_ext"
-    elif [ -d "${EXTRACTED_FIRM_DIR}/system/system/system_ext/etc" ]; then
-            export TARGET_ROM_SYSTEM_EXT_DIR="${EXTRACTED_FIRM_DIR}/system/system/system_ext"
-    fi
+	UNSUPPORTED_SELINUX=("audiomirroring" "fabriccrypto" "hal_dsms_default" "qb_id_prop" "hal_dsms_service" "proc_compaction_proactiveness" "sbauth" "ker_app" "kpp_app" "kpp_data" "attiqi_app" "kpoc_charger" "sec_diag" "mosey_app" "vendor_smcinvoke_device")
 
     if [ -d "${EXTRACTED_FIRM_DIR}/system" ]; then
+	    echo "- Patching selinux for system"
+
 	    REMOVE_LINE '(genfscon sysfs "/bus/usb/devices" (u object_r sysfs_usb ((s0) (s0))))' \
 		    "${EXTRACTED_FIRM_DIR}/system/system/etc/selinux/plat_sepolicy.cil" >/dev/null 2>&1
 		REMOVE_LINE '(genfscon proc "/sys/vm/compaction_proactiveness" (u object_r proc_compaction_proactiveness ((s0) (s0))))' \
 		    "${EXTRACTED_FIRM_DIR}/system/system/etc/selinux/plat_sepolicy.cil" >/dev/null 2>&1
     else
-        echo -e "- No system dir found."
-        return 1
+        echo -e "- No system directory found."
     fi
 
-    if [ ! -d "$TARGET_ROM_SYSTEM_EXT_DIR" ]; then
-        echo -e " - No system_ext_dir found. "
-        return 1
-    fi
+    if [ -d "$TARGET_ROM_SYSTEM_EXT_DIR" ]; then
+        echo -e "- Patching selinux for system_ext"
 
-    find "$TARGET_ROM_SYSTEM_EXT_DIR/etc/selinux/mapping/" -type f -name "*.0.cil" | while read -r SELINUX_FILE; do
-        # echo "  - Processing: $SELINUX_FILE"
+        find "${TARGET_ROM_SYSTEM_EXT_DIR}/etc/selinux/mapping/" -type f -name "*.0.cil" | while read -r SELINUX_FILE; do
+            # echo "  - Processing: $SELINUX_FILE"
 
-        for keyword in "${UNSUPPORTED_SELINUX[@]}"; do
-            if grep -qF "$keyword" "$SELINUX_FILE"; then
-                # echo "    - Removing keyword: $keyword"
-                sed -i "/$keyword/d" "$SELINUX_FILE"
-            fi
+            for keyword in "${UNSUPPORTED_SELINUX[@]}"; do
+                if grep -qF "$keyword" "$SELINUX_FILE"; then
+                    # echo "    - Removing keyword: $keyword"
+                    sed -i "/$keyword/d" "$SELINUX_FILE"
+                fi
+            done
         done
-    done
 
-	REMOVE_LINE '(genfscon proc "/sys/kernel/firmware_config" (u object_r proc_fmw ((s0) (s0))))' \
-	    "$TARGET_ROM_SYSTEM_EXT_DIR/etc/selinux/system_ext_sepolicy.cil" >/dev/null 2>&1
-	REMOVE_LINE '(genfscon proc "/sys/vm/compaction_proactiveness" (u object_r proc_compaction_proactiveness ((s0) (s0))))' \
-	    "$TARGET_ROM_SYSTEM_EXT_DIR/etc/selinux/system_ext_sepolicy.cil" >/dev/null 2>&1
-    REMOVE_LINE 'init.svc.vendor.wvkprov_server_hal                           u:object_r:wvkprov_prop:s0' \
-	    "$TARGET_ROM_SYSTEM_EXT_DIR/etc/selinux/system_ext_property_contexts" >/dev/null 2>&1
+	    REMOVE_LINE '(genfscon proc "/sys/kernel/firmware_config" (u object_r proc_fmw ((s0) (s0))))' \
+	        "${TARGET_ROM_SYSTEM_EXT_DIR}/etc/selinux/system_ext_sepolicy.cil" >/dev/null 2>&1
+	    REMOVE_LINE '(genfscon proc "/sys/vm/compaction_proactiveness" (u object_r proc_compaction_proactiveness ((s0) (s0))))' \
+	        "${TARGET_ROM_SYSTEM_EXT_DIR}/etc/selinux/system_ext_sepolicy.cil" >/dev/null 2>&1
+        REMOVE_LINE 'init.svc.vendor.wvkprov_server_hal                           u:object_r:wvkprov_prop:s0' \
+	        "${TARGET_ROM_SYSTEM_EXT_DIR}/etc/selinux/system_ext_property_contexts" >/dev/null 2>&1
+	else
+        echo -e "- No system_ext directory found."
+    fi
 }
 
 
@@ -1399,6 +1425,7 @@ APPLY_CUSTOM_FLOATING_FEATURE() {
 
     #========== LAUNCHER ==========#
     UPDATE_FLOATING_FEATURE "$FLOATING_FEATURE_FILE_DIRECTORY" "SEC_FLOATING_FEATURE_LAUNCHER_SUPPORT_CLOCK_LIVE_ICON" "TRUE"
+    UPDATE_FLOATING_FEATURE "$FLOATING_FEATURE_FILE_DIRECTORY" "SEC_FLOATING_FEATURE_LAUNCHER_CONFIG_ANIMATION_TYPE" "HighEnd"
 
     #========== AOD ==========#
 	if [ -d "$FIRM_DIR/$TARGET_DEVICE/system/system/priv-app"/AODService_* ]; then
@@ -1663,7 +1690,7 @@ FIX_CAMERA() {
     if [ "$STOCK_DEVICE_CHIPSET" = "MediaTek" ] && [ "$BUILD_BRAND" != "MTK" ]; then
         echo "- Adding mediatek camera related files."
 
-        if [ ! -s "$(pwd)/QuantumROM/Mods/Apps/MTK_Camera_Files_Android_${ANDROID_VERSION}.zip" ]; then
+        if [ -f "$(pwd)/QuantumROM/Mods/Apps/MTK_Camera_Files_Android_${ANDROID_VERSION}.zip" ]; then
             if curl -fsSL --connect-timeout 5 https://www.google.com >/dev/null; then
                 wget --no-check-certificate \
                     "https://github.com/SN-Abdullah-Al-Noman/Samsung_Special/releases/download/Android_${ANDROID_VERSION}/MTK_Camera_Files_Android_${ANDROID_VERSION}.zip" \
@@ -1784,6 +1811,8 @@ APPLY_STOCK_CONFIG() {
     if [ -d "${DEVICES_DIR}/$STOCK_DEVICE/extra" ]; then
         cp -af "${DEVICES_DIR}/$STOCK_DEVICE/extra/." "$(pwd)/OUT"
     fi
+
+	BUILD_PROP "$EXTRACTED_FIRM_DIR" "system" "ro.product.system.model" "$STOCK_DEVICE"
 }
 
 
@@ -1937,8 +1966,10 @@ ADD_SAMSUNG_FLAGSHIP_APPS() {
 
     # ================= SMART MANAGER =================
     echo "- Adding China smart manager."
+	
+	if [ ! -d "${EXTRACTED_FIRM_DIR}/system/system/priv-app/SmartManagerCN" ] && \
+        [ -f "$(pwd)/QuantumROM/Mods/Apps/Samsung_SmartManagerCN_Android_${ANDROID_VERSION}.zip" ]; then
 
-    if [ ! -s "$(pwd)/QuantumROM/Mods/Apps/Samsung_SmartManagerCN_Android_${ANDROID_VERSION}.zip" ]; then
         if curl -fsSL --connect-timeout 5 https://www.google.com >/dev/null; then
             wget --no-check-certificate \
                 "https://github.com/SN-Abdullah-Al-Noman/Samsung_Special/releases/download/Android_${ANDROID_VERSION}/Samsung_SmartManagerCN_Android_${ANDROID_VERSION}.zip" \
@@ -1949,7 +1980,9 @@ ADD_SAMSUNG_FLAGSHIP_APPS() {
         fi
     fi
 
-    if [ -s "$(pwd)/QuantumROM/Mods/Apps/Samsung_SmartManagerCN_Android_${ANDROID_VERSION}.zip" ]; then
+    if [ ! -d "${EXTRACTED_FIRM_DIR}/system/system/priv-app/SmartManagerCN" ] && \
+        [ -f "$(pwd)/QuantumROM/Mods/Apps/Samsung_SmartManagerCN_Android_${ANDROID_VERSION}.zip" ]; then
+
         rm -rf "$(pwd)/QuantumROM/Mods/Apps/Samsung_SmartManagerCN_Android_${ANDROID_VERSION}"
         unzip -o "$(pwd)/QuantumROM/Mods/Apps/Samsung_SmartManagerCN_Android_${ANDROID_VERSION}.zip" \
             -d "$(pwd)/QuantumROM/Mods/Apps/Samsung_SmartManagerCN_Android_${ANDROID_VERSION}" >/dev/null 2>&1
@@ -1966,10 +1999,12 @@ ADD_SAMSUNG_FLAGSHIP_APPS() {
             "com.samsung.android.sm_cn"
     fi
 
-    # ================= PHOTO EDITOR =================
+    # ================= PHOTO EDITOR AI FULL =================
     echo "- Adding Photo editor ai full."
+	
+	if [ ! -d "${EXTRACTED_FIRM_DIR}/system/system/priv-app/PhotoEditor_AIFull" ] && \
+        [ -f "$(pwd)/QuantumROM/Mods/Apps/Samsung_PhotoEditor_AIFull_Android_${ANDROID_VERSION}.zip" ]; then
 
-    if [ ! -s "$(pwd)/QuantumROM/Mods/Apps/Samsung_PhotoEditor_AIFull_Android_${ANDROID_VERSION}.zip" ]; then
         if curl -fsSL --connect-timeout 5 https://www.google.com >/dev/null; then
             wget --no-check-certificate \
                 "https://github.com/SN-Abdullah-Al-Noman/Samsung_Special/releases/download/Android_${ANDROID_VERSION}/Samsung_PhotoEditor_AIFull_Android_${ANDROID_VERSION}.zip" \
@@ -1980,7 +2015,9 @@ ADD_SAMSUNG_FLAGSHIP_APPS() {
         fi
     fi
 
-    if [ -s "$(pwd)/QuantumROM/Mods/Apps/Samsung_PhotoEditor_AIFull_Android_${ANDROID_VERSION}.zip" ]; then
+    if [ ! -d "${EXTRACTED_FIRM_DIR}/system/system/priv-app/PhotoEditor_AIFull" ] && \
+        [ -f "$(pwd)/QuantumROM/Mods/Apps/Samsung_PhotoEditor_AIFull_Android_${ANDROID_VERSION}.zip" ]; then
+
         rm -rf "$(pwd)/QuantumROM/Mods/Apps/Samsung_PhotoEditor_AIFull_Android_${ANDROID_VERSION}"
 
         unzip -o "$(pwd)/QuantumROM/Mods/Apps/Samsung_PhotoEditor_AIFull_Android_${ANDROID_VERSION}.zip" \
@@ -2007,8 +2044,10 @@ ADD_SAMSUNG_FLAGSHIP_APPS() {
     # ================= OCR DATA PROVIDER =================
     echo "- Adding Samsung OCR Data Provider."
 
-    if [ ! -s "$(pwd)/QuantumROM/Mods/Apps/Samsung_OCRDataProvider_Android_${ANDROID_VERSION}.zip" ]; then
-        if curl -fsSL --connect-timeout 5 https://www.google.com >/dev/null; then
+    if [ ! -d "${EXTRACTED_FIRM_DIR}/system/system/app/OCRDataProvider" ] && \
+        [ -f "$(pwd)/QuantumROM/Mods/Apps/Samsung_OCRDataProvider_Android_${ANDROID_VERSION}.zip" ]; then
+
+		if curl -fsSL --connect-timeout 5 https://www.google.com >/dev/null; then
             wget --no-check-certificate \
                 "https://github.com/SN-Abdullah-Al-Noman/Samsung_Special/releases/download/Android_${ANDROID_VERSION}/Samsung_OCRDataProvider_Android_${ANDROID_VERSION}.zip" \
                 -O "$(pwd)/QuantumROM/Mods/Apps/Samsung_OCRDataProvider_Android_${ANDROID_VERSION}.zip"
@@ -2018,14 +2057,16 @@ ADD_SAMSUNG_FLAGSHIP_APPS() {
         fi
     fi
 
-    if [ -s "$(pwd)/QuantumROM/Mods/Apps/Samsung_OCRDataProvider_Android_${ANDROID_VERSION}.zip" ]; then
+    if [ ! -d "${EXTRACTED_FIRM_DIR}/system/system/app/OCRDataProvider" ] && \
+        [ -f "$(pwd)/QuantumROM/Mods/Apps/Samsung_OCRDataProvider_Android_${ANDROID_VERSION}.zip" ]; then
+
         rm -rf "$(pwd)/QuantumROM/Mods/Apps/Samsung_OCRDataProvider_Android_${ANDROID_VERSION}"
         unzip -o "$(pwd)/QuantumROM/Mods/Apps/Samsung_OCRDataProvider_Android_${ANDROID_VERSION}.zip" \
             -d "$(pwd)/QuantumROM/Mods/Apps/Samsung_OCRDataProvider_Android_${ANDROID_VERSION}" >/dev/null 2>&1
 
         cp -rfa "$(pwd)/QuantumROM/Mods/Apps/Samsung_OCRDataProvider_Android_${ANDROID_VERSION}/." "${EXTRACTED_FIRM_DIR}/"
 
-		if [ ! -d "${EXTRACTED_FIRM_DIR}/system/system/saiv/textrecognition" ]; then
+		if [ ! -d "${EXTRACTED_FIRM_DIR}/system/system/app/OCRDataProvider" ]; then
 	        cp -rfa "$(pwd)/QuantumROM/Mods/Apps/OCR/." "${EXTRACTED_FIRM_DIR}/"
         fi
     fi
@@ -2033,7 +2074,7 @@ ADD_SAMSUNG_FLAGSHIP_APPS() {
     # ================= IMPORTANT APPS =================
 	echo "- Adding Samsung Important Apps."
 
-    if [ ! -s "$(pwd)/QuantumROM/Mods/Apps/Samsung_Important_Apps_Android_${ANDROID_VERSION}.zip" ]; then
+    if [ ! -f "$(pwd)/QuantumROM/Mods/Apps/Samsung_Important_Apps_Android_${ANDROID_VERSION}.zip" ]; then
         if curl -fsSL --connect-timeout 5 https://www.google.com >/dev/null; then
             wget --no-check-certificate \
                 "https://github.com/SN-Abdullah-Al-Noman/Samsung_Special/releases/download/Android_${ANDROID_VERSION}/Samsung_Important_Apps_Android_${ANDROID_VERSION}.zip" \
@@ -2109,8 +2150,8 @@ APPLY_CUSTOM_FEATURES() {
 DECODE_OMC() {
     echo " "
 
-    if [ "$#" -ne 1 ]; then
-        echo -e "Usage: ${FUNCNAME[0]} <EXTRACTED_FIRM_DIR>"
+    if [ "$#" -ne 2 ]; then
+        echo -e "Usage: ${FUNCNAME[0]} <EXTRACTED_FIRM_DIR> <OUT_DIR>"
         return 1
     fi
 
@@ -2122,15 +2163,16 @@ DECODE_OMC() {
     fi
 
     local FW_DIR="$1"
+	local OUT_DIR="$2"
 
     if [ -d "${FW_DIR}/odm/etc/omc" ]; then
-        rm -rf "${WORK_DIR}/odm_decoded"
+        rm -rf "${OUT_DIR}/odm_decoded"
 
-        echo "Decoding odm/etc/omc."
+        echo "Decoding odm/etc/omc in ${OUT_DIR}"
 
         java -jar "$omc_decoder" \
             -i "${FW_DIR}/odm/etc/omc" \
-            -o "${WORK_DIR}/odm_decoded" \
+            -o "${OUT_DIR}/odm_decoded" \
             >/dev/null 2>&1 || {
                 echo -e "Failed decoding odm/etc/omc."
             }
@@ -2139,13 +2181,13 @@ DECODE_OMC() {
     fi
 
     if [ -d "${FW_DIR}/optics" ]; then
-        rm -rf "${WORK_DIR}/optics_decoded"
+        rm -rf "${OUT_DIR}/optics_decoded"
 
-        echo "Decoding optics."
+        echo "Decoding optics in ${OUT_DIR}"
 
         java -jar "$omc_decoder" \
             -i "${FW_DIR}/optics" \
-            -o "${WORK_DIR}/optics_decoded" \
+            -o "${OUT_DIR}/optics_decoded" \
             >/dev/null 2>&1 || {
                 echo -e "Failed decoding optics."
             }
