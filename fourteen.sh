@@ -8,11 +8,11 @@ fi
 VERSION="1"
 
 # Device info
-export STOCK_DEVICE="SM-A225F"
-export TARGET_DEVICE="A34"
+export STOCK_DEVICE="$1"
+export TARGET_DEVICE="$2"
 export TARGET_DEVICE_CSC="$3"
 export TARGET_DEVICE_IMEI="$4"
-export OUTPUT_FILESYSTEM="erofs"
+export OUTPUT_FILESYSTEM="$5"
 
 # Directories
 export FIRM_DIR="$(pwd)/FW"
