@@ -2182,7 +2182,7 @@ APPLY_CUSTOM_FEATURES() {
 
     # Apply custom floating feature.
 	APPLY_CUSTOM_FLOATING_FEATURE "$FLOATING_FEATURE_FILE_DIRECTORY"
-	
+
 	# Fix samsung device health manager service
 	# UPDATE_SDHMS "$EXTRACTED_FIRM_DIR"
 
