@@ -369,8 +369,8 @@ PREPARE_PARTITIONS() {
         export BUILD_PARTITIONS="odm,odm_dlkm,product,system,system_ext,system_dlkm,vendor,vendor_dlkm,odm_a,odm_dlkm_a,product_a,system_a,system_ext_a,system_dlkm_a,vendor_a,vendor_dlkm_a,optics,optics_a"
     fi
 
-    if [ -n "$STOCK_DEVICE" ] && [ -f "${DEVICES_DIR}/$STOCK_DEVICE/config" ]; then
-        export STOCK_HAS_AB_SLOT="$(grep -m1 '^STOCK_HAS_AB_SLOT=' "${DEVICES_DIR}/$STOCK_DEVICE/config" | cut -d= -f2 | tr -d '\r')"
+    if [ -n "$STOCK_DEVICE" ] && [ -f "${DEVICES_DIR}/${STOCK_DEVICE}/config" ]; then
+        export STOCK_HAS_AB_SLOT="$(grep -m1 '^STOCK_HAS_AB_SLOT=' "${DEVICES_DIR}/${STOCK_DEVICE}/config" | cut -d= -f2 | tr -d '\r')"
     fi
 
 	# Delete empty b slot images
@@ -1417,11 +1417,11 @@ APPLY_CUSTOM_FLOATING_FEATURE() {
     UPDATE_FLOATING_FEATURE "$FLOATING_FEATURE_FILE_DIRECTORY" "SEC_FLOATING_FEATURE_LAUNCHER_CONFIG_ANIMATION_TYPE" "HighEnd"
 
     #========== AOD ==========#
-	if [ -d "$FIRM_DIR/$TARGET_DEVICE/system/system/priv-app"/AODService_* ]; then
+	#if [ -d "$FIRM_DIR/$TARGET_DEVICE/system/system/priv-app"/AODService_* ]; then
 	    # Do not edit AOD item line for Android 14
-		# UPDATE_FLOATING_FEATURE "$FLOATING_FEATURE_FILE_DIRECTORY" "SEC_FLOATING_FEATURE_FRAMEWORK_CONFIG_AOD_ITEM" "aodversion=7,clocktransition,coverboldfont"
-        UPDATE_FLOATING_FEATURE "$FLOATING_FEATURE_FILE_DIRECTORY" "SEC_FLOATING_FEATURE_LCD_CONFIG_AOD_FULLSCREEN" "1"
-    fi
+		#UPDATE_FLOATING_FEATURE "$FLOATING_FEATURE_FILE_DIRECTORY" "SEC_FLOATING_FEATURE_FRAMEWORK_CONFIG_AOD_ITEM" "aodversion=7,clocktransition,coverboldfont"
+        #UPDATE_FLOATING_FEATURE "$FLOATING_FEATURE_FILE_DIRECTORY" "SEC_FLOATING_FEATURE_LCD_CONFIG_AOD_FULLSCREEN" "1"
+    #fi
 
     #========== CAMERA ==========#
     UPDATE_FLOATING_FEATURE "$FLOATING_FEATURE_FILE_DIRECTORY" "SEC_FLOATING_FEATURE_CAMERA_SUPPORT_PRIVACY_TOGGLE" "TRUE"
@@ -1722,7 +1722,7 @@ APPLY_STOCK_CONFIG() {
         return 1
     fi
 
-    if [ ! -f "${DEVICES_DIR}/$STOCK_DEVICE/config" ]; then
+    if [ ! -f "${DEVICES_DIR}/${STOCK_DEVICE}/config" ]; then
         echo -e "Config file for $STOCK_DEVICE not found in $DEVICES_DIR"
         return 1
 	fi
@@ -1732,19 +1732,19 @@ APPLY_STOCK_CONFIG() {
         return 1
 	fi
 
-    if [ -f "${DEVICES_DIR}/$STOCK_DEVICE/config" ]; then
+    if [ -f "${DEVICES_DIR}/${STOCK_DEVICE}/config" ]; then
         echo -e "$STOCK_DEVICE config found."
-        export STOCK_VNDK_VERSION="$(grep -m1 '^STOCK_VNDK_VERSION=' "${DEVICES_DIR}/$STOCK_DEVICE/config" | cut -d= -f2 | tr -d '\r')"
-        export STOCK_HAS_SEPARATE_SYSTEM_EXT="$(grep -m1 '^STOCK_HAS_SEPARATE_SYSTEM_EXT=' "${DEVICES_DIR}/$STOCK_DEVICE/config" | cut -d= -f2 | tr -d '\r')"
-    	export STOCK_DVFS_FILENAME="$(grep -m1 '^STOCK_DVFS_FILENAME=' "${DEVICES_DIR}/$STOCK_DEVICE/config" | cut -d= -f2 | tr -d '\r')"
-		export STOCK_DEVICE_CPU_ABILIST="$(grep -m1 '^STOCK_DEVICE_CPU_ABILIST=' "${DEVICES_DIR}/$STOCK_DEVICE/config" | cut -d= -f2 | tr -d '\r')"
-		export STOCK_DEVICE_CHIPSET="$(grep -m1 '^STOCK_DEVICE_CHIPSET=' "${DEVICES_DIR}/$STOCK_DEVICE/config" | cut -d= -f2 | tr -d '\r')"
-		export USE_ALT_SDHMS_APP="$(grep -m1 '^USE_ALT_SDHMS_APP=' "${DEVICES_DIR}/$STOCK_DEVICE/config" | cut -d= -f2 | tr -d '\r')"
-		export STOCK_HAS_ESIM_SUPPORT="$(grep -m1 '^STOCK_HAS_ESIM_SUPPORT=' "${DEVICES_DIR}/$STOCK_DEVICE/config" | cut -d= -f2 | tr -d '\r')"
+        export STOCK_VNDK_VERSION="$(grep -m1 '^STOCK_VNDK_VERSION=' "${DEVICES_DIR}/${STOCK_DEVICE}/config" | cut -d= -f2 | tr -d '\r')"
+        export STOCK_HAS_SEPARATE_SYSTEM_EXT="$(grep -m1 '^STOCK_HAS_SEPARATE_SYSTEM_EXT=' "${DEVICES_DIR}/${STOCK_DEVICE}/config" | cut -d= -f2 | tr -d '\r')"
+    	export STOCK_DVFS_FILENAME="$(grep -m1 '^STOCK_DVFS_FILENAME=' "${DEVICES_DIR}/${STOCK_DEVICE}/config" | cut -d= -f2 | tr -d '\r')"
+		export STOCK_DEVICE_CPU_ABILIST="$(grep -m1 '^STOCK_DEVICE_CPU_ABILIST=' "${DEVICES_DIR}/${STOCK_DEVICE}/config" | cut -d= -f2 | tr -d '\r')"
+		export STOCK_DEVICE_CHIPSET="$(grep -m1 '^STOCK_DEVICE_CHIPSET=' "${DEVICES_DIR}/${STOCK_DEVICE}/config" | cut -d= -f2 | tr -d '\r')"
+		export USE_ALT_SDHMS_APP="$(grep -m1 '^USE_ALT_SDHMS_APP=' "${DEVICES_DIR}/${STOCK_DEVICE}/config" | cut -d= -f2 | tr -d '\r')"
+		export STOCK_HAS_ESIM_SUPPORT="$(grep -m1 '^STOCK_HAS_ESIM_SUPPORT=' "${DEVICES_DIR}/${STOCK_DEVICE}/config" | cut -d= -f2 | tr -d '\r')"
     fi
 
 	echo "Stock device vndk version: $STOCK_VNDK_VERSION"
-    export STOCK_ROM_FLOATING_FEATURE="${DEVICES_DIR}/$STOCK_DEVICE/floating_feature.xml"
+    export STOCK_ROM_FLOATING_FEATURE="${DEVICES_DIR}/${STOCK_DEVICE}/floating_feature.xml"
 	export STOCK_SIOP_POLICY_FILENAME="$(awk -F'[<>]' '$2 == "SEC_FLOATING_FEATURE_SYSTEM_CONFIG_SIOP_POLICY_FILENAME" {print $3}' "$STOCK_ROM_FLOATING_FEATURE" | tr -d '\r' | xargs)"
 	export STOCK_DEVICE_TYPE="$(awk -F'[<>]' '$2 == "SEC_FLOATING_FEATURE_COMMON_CONFIG_DEVICE_MANUFACTURING_TYPE" {print $3}' "$STOCK_ROM_FLOATING_FEATURE")"
 
@@ -1788,13 +1788,25 @@ APPLY_STOCK_CONFIG() {
 	rm -rf "$EXTRACTED_FIRM_DIR"/product/overlay/framework-res*auto_generated_rro_product.apk
 	rm -rf ${EXTRACTED_FIRM_DIR}/product/overlay/SystemUI*auto_generated_rro_product.apk
 
-	cp -a "${DEVICES_DIR}/$STOCK_DEVICE/Stock/." "${EXTRACTED_FIRM_DIR}/"
+	cp -a "${DEVICES_DIR}/${STOCK_DEVICE}/Stock/." "${EXTRACTED_FIRM_DIR}/"
 
     if [ -d "${DEVICES_DIR}/${STOCK_DEVICE}/extra" ]; then
         cp -af "${DEVICES_DIR}/${STOCK_DEVICE}/extra/." "$(pwd)/OUT"
     fi
 
 	BUILD_PROP "$EXTRACTED_FIRM_DIR" "system" "ro.product.system.model" "$STOCK_DEVICE"
+
+    if [ -f "${EXTRACTED_FIRM_DIR}/system/system/framework/ssrm.jar" ]; then
+        DECOMPILE "$APKTOOL" "${EXTRACTED_FIRM_DIR}/system/system/framework" "${EXTRACTED_FIRM_DIR}/system/system/framework/ssrm.jar" "$WORK_DIR" || return 1
+        PATCH_SSRM "${WORK_DIR}/ssrm" || return 1
+        RECOMPILE "$APKTOOL" "${FIRM_DIR}/${TARGET_DEVICE}/system/system/framework" "${WORK_DIR}/ssrm" "$WORK_DIR" || return 1
+    fi
+
+    if [ ! -f "${WORK_DIR}/services/smali/com/android/server/am/FreecessController.smali" ]; then
+	    DECOMPILE "$APKTOOL" "${EXTRACTED_FIRM_DIR}/system/system/framework" "${EXTRACTED_FIRM_DIR}/system/system/framework/services.jar" "$WORK_DIR" || return 1
+	fi
+
+	sed -Ei '/const-string\/jumbo v3,/s|ro\.product\.model|ro.product.vendor.model|' "${WORK_DIR}/services/smali/com/android/server/am/FreecessController.smali" || return 1
 }
 
 
@@ -2079,7 +2091,7 @@ ADD_SAMSUNG_FLAGSHIP_APPS() {
         unzip -o "$(pwd)/QuantumROM/Mods/Apps/Samsung_OCRDataProvider_Android_${ANDROID_VERSION}.zip" \
             -d "$(pwd)/QuantumROM/Mods/Apps/Samsung_OCRDataProvider_Android_${ANDROID_VERSION}" >/dev/null 2>&1
 
-	    #============= OCR ==========#
+		#============= OCR ==========#
         sed -i '/SEC_FLOATING_FEATURE_CAMERA_CONFIG_OCR_ENGINE_UNSUPPORT /d' "$FLOATING_FEATURE_FILE_DIRECTORY"
         UPDATE_FLOATING_FEATURE "$FLOATING_FEATURE_FILE_DIRECTORY" "SEC_FLOATING_FEATURE_CAMERA_CONFIG_STRIDE_OCR_VERSION" "V2"
 
