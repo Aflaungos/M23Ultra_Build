@@ -63,7 +63,7 @@ jobs:
       - name: Download firmware ▶️ ${{ github.event.inputs.TARGET_DEVICE }} - ${{ github.event.inputs.TARGET_DEVICE_CSC }}
         run: |
           source scripts/Build.sh
-          DOWNLOAD_TARGET_FIRMWARE "${{ github.event.inputs.STOCK_DEVICE }}" "${{ github.event.inputs.STOCK_DEVICE_CSC }}" "${{ github.event.inputs.STOCK_DEVICE_IMEI }}" "FW" "${{ github.event.inputs.STOCK_FW_VERSION }}"
+          DOWNLOAD_STOCK_FIRMWARE "${{ github.event.inputs.STOCK_DEVICE }}" "${{ github.event.inputs.STOCK_DEVICE_CSC }}" "${{ github.event.inputs.STOCK_DEVICE_IMEI }}" "FW" "${{ github.event.inputs.STOCK_FW_VERSION }}"
           DOWNLOAD_TARGET_FIRMWARE "${{ github.event.inputs.TARGET_DEVICE }}" "${{ github.event.inputs.TARGET_DEVICE_CSC }}" "${{ github.event.inputs.TARGET_DEVICE_IMEI }}" "FW" "${{ github.event.inputs.TARGET_FW_VERSION }}"
 
       - name: Extract firmware
@@ -76,6 +76,8 @@ jobs:
         run: |
           sudo bash sixteen.sh \
             "${{ github.event.inputs.STOCK_DEVICE }}" \
+            "${{ github.event.inputs.STOCK_DEVICE_CSC }}" \
+            "${{ github.event.inputs.STOCK_DEVICE_IMEI }}" \
             "${{ github.event.inputs.USE_UI_8_TETHERING_APEX }}" \
             "${{ github.event.inputs.TARGET_DEVICE }}" \
             "${{ github.event.inputs.TARGET_DEVICE_CSC }}" \
